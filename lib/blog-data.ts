@@ -19,32 +19,32 @@ const teamMembers: Author[] = [
   {
     name: "리키 스미스",
     role: "대표이사",
-    avatarSrc: "/about_team-section_ricky-smith.png",
+    avatarSrc: "https://shadcndesign-agency-template.vercel.app/about_team-section_ricky-smith.png",
   },
   {
     name: "커트 베이츠",
     role: "혁신 전문가",
-    avatarSrc: "/about_team-section_kurt-bates.png",
+    avatarSrc: "https://shadcndesign-agency-template.vercel.app/about_team-section_kurt-bates.png",
   },
   {
     name: "데니스 캘리스",
     role: "디자이너",
-    avatarSrc: "/about_team-section_dennis-callis.png",
+    avatarSrc: "https://shadcndesign-agency-template.vercel.app/about_team-section_dennis-callis.png",
   },
   {
     name: "프랜시스 스완",
     role: "UI/UX 디자이너",
-    avatarSrc: "/about_team-section_frances-swann.png",
+    avatarSrc: "https://shadcndesign-agency-template.vercel.app/about_team-section_frances-swann.png",
   },
   {
     name: "코리나 맥코이",
     role: "문화 큐레이터",
-    avatarSrc: "/about_team-section_corina-mccoy.png",
+    avatarSrc: "https://shadcndesign-agency-template.vercel.app/about_team-section_corina-mccoy.png",
   },
   {
     name: "론다 로즈",
     role: "디자이너",
-    avatarSrc: "/about_team-section_rhonda-rhodes.png",
+    avatarSrc: "https://shadcndesign-agency-template.vercel.app/about_team-section_rhonda-rhodes.png",
   },
 ];
 

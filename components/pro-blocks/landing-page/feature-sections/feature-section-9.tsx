@@ -23,8 +23,8 @@ export function FeatureSection9() {
               <Image
                 src="https://shadcndesign-agency-template.vercel.app/home_feature-section_beautifully-functional.png"
                 alt="Beautifully functional"
-                layout="fill"
-                objectFit="contain"
+                fill
+                className="object-contain"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -42,8 +42,8 @@ export function FeatureSection9() {
               <Image
                 src="https://shadcndesign-agency-template.vercel.app/home_feature-section_your-identity.png"
                 alt="Your identity"
-                layout="fill"
-                objectFit="contain"
+                fill
+                className="object-contain"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -58,8 +58,8 @@ export function FeatureSection9() {
               <Image
                 src="https://shadcndesign-agency-template.vercel.app/home_feature-section_engage-and-connect.png"
                 alt="Engage and connect"
-                layout="fill"
-                objectFit="contain"
+                fill
+                className="object-contain"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -77,8 +77,8 @@ export function FeatureSection9() {
               <Image
                 src="https://shadcndesign-agency-template.vercel.app/home_feature-section_results-driven.png"
                 alt="Results-driven"
-                layout="fill"
-                objectFit="contain"
+                fill
+                className="object-contain"
               />
             </div>
             <div className="flex flex-col gap-2">
