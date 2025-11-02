@@ -278,15 +278,16 @@ function groupBlocks(blocks: BlockObjectResponse[]): React.ReactNode[] {
   });
 
   // 마지막 리스트 처리
-  if (currentList) {
+  if (currentList !== null) {
+    const finalList: { type: 'ul' | 'ol'; items: BlockObjectResponse[] } = currentList;
     result.push(
-      currentList.type === 'ul' ? (
+      finalList.type === 'ul' ? (
         <ul key="list-final" className="ml-6 list-disc space-y-2 my-4">
-          {currentList.items.map((item, i) => renderBlock(item, i))}
+          {finalList.items.map((item, i) => renderBlock(item, i))}
         </ul>
       ) : (
         <ol key="list-final" className="ml-6 list-decimal space-y-2 my-4">
-          {currentList.items.map((item, i) => renderBlock(item, i))}
+          {finalList.items.map((item, i) => renderBlock(item, i))}
         </ol>
       )
     );
