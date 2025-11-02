@@ -1,7 +1,4 @@
-"use client";
-
-import { BLOG_POSTS } from "@/lib/blog-data";
-import { use } from "react";
+import { getPostBySlug, getAllPostSlugs } from "@/lib/mdx-handler";
 import Image from "next/image";
 import { LpNavbar1 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-1";
 import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
@@ -13,14 +10,21 @@ import { BlogMoreArticles } from "@/components/pro-blocks/landing-page/blog-sect
 
 interface BlogPageProps {
   params: Promise<{
-    id: string;
+    slug: string;
   }>;
 }
 
-export default function BlogPage({ params }: BlogPageProps) {
-  const resolvedParams = use(params);
-  const postId = parseInt(resolvedParams.id, 10);
-  const post = BLOG_POSTS.find((p) => p.id === postId);
+// 정적 생성을 위한 함수
+export async function generateStaticParams() {
+  const slugs = getAllPostSlugs();
+  return slugs.map((slug) => ({
+    slug,
+  }));
+}
+
+export default async function BlogPage({ params }: BlogPageProps) {
+  const resolvedParams = await params;
+  const post = getPostBySlug(resolvedParams.slug);
 
   if (!post) {
     notFound();

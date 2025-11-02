@@ -1,12 +1,12 @@
-"use client";
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Image from "next/image";
 import Link from "next/link";
 import { Tagline } from "@/components/pro-blocks/landing-page/tagline";
-import { BLOG_POSTS } from "@/lib/blog-data";
+import { getAllPosts } from "@/lib/mdx-handler";
 
-export function BlogSection1() {
+export async function BlogSection1() {
+  const posts = getAllPosts();
+
   return (
     <section
       className="bg-background section-padding-y border-y border-dashed border-border"
@@ -34,10 +34,10 @@ export function BlogSection1() {
             className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-6 lg:grid-cols-4"
             role="list"
           >
-            {BLOG_POSTS.slice(0, 4).map((post) => (
+            {posts.slice(0, 4).map((post) => (
               <Link
-                href={`/blog/${post.id}`}
-                key={post.id}
+                href={`/blog/${post.slug}`}
+                key={post.slug}
                 className="group block"
               >
                 {/* Blog Card */}
