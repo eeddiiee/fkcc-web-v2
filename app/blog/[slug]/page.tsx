@@ -27,7 +27,11 @@ export async function generateStaticParams() {
     return response.results
       .filter((page: any) => page.object === 'page' && 'properties' in page)
       .map((page: any) => {
-        const slug = page.properties.slug?.rich_text?.[0]?.plain_text || '';
+        // slug는 Formula 타입이므로 formula.string에서 추출
+        const slugProperty = page.properties.slug;
+        const slug = slugProperty?.type === 'formula' && slugProperty.formula?.type === 'string'
+          ? slugProperty.formula.string || ''
+          : '';
         return { slug };
       })
       .filter((item: any) => item.slug); // 빈 slug 제외
@@ -89,10 +93,12 @@ export default async function BlogPage({ params }: BlogPageProps) {
 
                 <div className="flex items-center gap-4">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={post.author.avatarSrc}
-                      alt={post.author.name}
-                    />
+                    {post.author.avatarSrc && (
+                      <AvatarImage
+                        src={post.author.avatarSrc}
+                        alt={post.author.name}
+                      />
+                    )}
                   </Avatar>
                   <div className="flex flex-col">
                     <p className="text-foreground text-sm leading-5 font-medium">
@@ -107,13 +113,19 @@ export default async function BlogPage({ params }: BlogPageProps) {
 
               <div className="h-full flex-1">
                 <AspectRatio ratio={16 / 10}>
-                  <Image
-                    src={post.image}
-                    alt={`${post.title} thumbnail`}
-                    fill
-                    className="h-full w-full rounded-xl object-cover"
-                    priority
-                  />
+                  {post.image ? (
+                    <Image
+                      src={post.image}
+                      alt={`${post.title} thumbnail`}
+                      fill
+                      className="h-full w-full rounded-xl object-cover"
+                      priority
+                    />
+                  ) : (
+                    <div className="h-full w-full rounded-xl bg-muted flex items-center justify-center">
+                      <span className="text-muted-foreground">이미지 없음</span>
+                    </div>
+                  )}
                 </AspectRatio>
               </div>
             </div>

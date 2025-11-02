@@ -53,12 +53,18 @@ export async function BlogSection1() {
                     ratio={4 / 3}
                     className="overflow-hidden rounded-xl"
                   >
-                    <Image
-                      src={post.image}
-                      alt={`${post.title} thumbnail`}
-                      fill
-                      className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                    />
+                    {post.image ? (
+                      <Image
+                        src={post.image}
+                        alt={`${post.title} thumbnail`}
+                        fill
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-muted flex items-center justify-center">
+                        <span className="text-muted-foreground text-sm">이미지 없음</span>
+                      </div>
+                    )}
                   </AspectRatio>
 
                   {/* Post Content */}
