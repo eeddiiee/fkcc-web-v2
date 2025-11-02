@@ -2,10 +2,16 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import Image from "next/image";
 import Link from "next/link";
 import { Tagline } from "@/components/pro-blocks/landing-page/tagline";
-import { getAllPosts } from "@/lib/mdx-handler";
+import { fetchPages } from "@/lib/notion";
+import { notionPagesToBlogPosts } from "@/lib/notion-blog-adapter";
 
 export async function BlogSection1() {
-  const posts = getAllPosts();
+  // Notion에서 블로그 포스트 가져오기
+  const response = await fetchPages();
+  const posts = notionPagesToBlogPosts(response.results);
+
+  // 디버깅: 포스트 데이터 확인
+  console.log('[BlogSection1] 포스트 데이터:', JSON.stringify(posts, null, 2));
 
   return (
     <section
