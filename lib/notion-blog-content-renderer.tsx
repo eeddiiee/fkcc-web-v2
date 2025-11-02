@@ -72,7 +72,8 @@ function generateId(text: string): string {
  * Table of Contents 아이템 인터페이스
  */
 interface TocItem {
-  id: string;
+  id: string;        // URL fragment용 (anchor)
+  blockId: string;   // React key용 (고유 식별자)
   text: string;
   level: number;
 }
@@ -311,7 +312,12 @@ function extractToc(blocks: BlockObjectResponse[]): TocItem[] {
       const id = generateId(text);
 
       if (text.trim()) {
-        toc.push({ id, text, level });
+        toc.push({
+          id,              // URL fragment용
+          blockId: block.id,  // React key용 (Notion block ID는 항상 고유함)
+          text,
+          level
+        });
       }
     }
   });
@@ -359,7 +365,7 @@ export function NotionBlogContentRenderer({ blocks }: NotionBlogContentRendererP
           <nav className="flex flex-col gap-3">
             {toc.map((item) => (
               <a
-                key={item.id}
+                key={item.blockId}
                 href={`#${item.id}`}
                 onClick={(e) => handleScroll(e, `#${item.id}`)}
                 className={`text-muted-foreground hover:text-foreground text-sm ${
