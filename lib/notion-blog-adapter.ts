@@ -1,5 +1,6 @@
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { BlogPost, Author } from './mdx-handler';
+import { notion } from './notion';
 
 /**
  * Notion 페이지 속성에서 값을 안전하게 추출하는 헬퍼 함수들
@@ -15,9 +16,32 @@ function extractTitle(property: any): string {
 
 // Rich Text 속성 추출
 function extractRichText(property: any): string {
-  if (property?.type === 'rich_text' && Array.isArray(property.rich_text)) {
-    return property.rich_text[0]?.plain_text || '';
+  if (!property) return '';
+  
+  // Rich Text 타입
+  if (property.type === 'rich_text' && Array.isArray(property.rich_text)) {
+    if (property.rich_text.length === 0) return '';
+    // 모든 rich_text 항목의 plain_text를 합치기
+    return property.rich_text
+      .map((item: any) => item?.plain_text || '')
+      .filter(Boolean)
+      .join('') || '';
   }
+  
+  // Title 타입도 처리 (혹시 모를 경우)
+  if (property.type === 'title' && Array.isArray(property.title)) {
+    if (property.title.length === 0) return '';
+    return property.title
+      .map((item: any) => item?.plain_text || '')
+      .filter(Boolean)
+      .join('') || '';
+  }
+  
+  // Select 타입도 처리
+  if (property.type === 'select' && property.select) {
+    return property.select.name || '';
+  }
+  
   return '';
 }
 
@@ -84,13 +108,95 @@ function extractFormula(property: any): string {
   return '';
 }
 
+// Relation 속성 추출 (Author용)
+async function extractRelation(property: any): Promise<string> {
+  if (property?.type === 'relation' && Array.isArray(property.relation) && property.relation.length > 0) {
+    // Relation ID 반환 (추후 페이지 정보를 가져와야 함)
+    return property.relation[0].id || '';
+  }
+  return '';
+}
+
+// Relation으로 연결된 Author 페이지에서 정보 추출
+async function fetchAuthorFromRelation(relationId: string, notion: any): Promise<Author> {
+  if (!relationId) {
+    return {
+      name: '',
+      role: '',
+      avatarSrc: '',
+    };
+  }
+
+  try {
+    const authorPage = await notion.pages.retrieve({ page_id: relationId }) as PageObjectResponse;
+    const props = authorPage.properties;
+
+    return {
+      name: extractTitle(props.Name || props.name) || extractRichText(props.Name || props.name),
+      role: extractRichText(props.Role || props.role) || '',
+      avatarSrc: extractImage(props['Profile-Img'] || props['profile-img']) || '',
+    };
+  } catch (error) {
+    console.error('Author Relation 페이지 조회 실패:', error);
+    return {
+      name: '',
+      role: '',
+      avatarSrc: '',
+    };
+  }
+}
+
 /**
  * Notion PageObjectResponse를 BlogPost 인터페이스로 변환
  * @param page - Notion 페이지 객체
  * @returns BlogPost 객체
  */
-export function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
+export async function notionPageToBlogPost(page: PageObjectResponse): Promise<BlogPost> {
   const properties = page.properties;
+  
+  // 프로퍼티 키 목록 (재사용)
+  const propertyKeys = Object.keys(properties);
+  
+  // 디버깅: 모든 프로퍼티 정보 출력
+  console.log('\n========== Notion 프로퍼티 디버깅 ==========');
+  console.log('[Notion Blog Adapter] 모든 프로퍼티 키:', propertyKeys);
+  
+  // 모든 프로퍼티의 타입과 값 출력
+  propertyKeys.forEach(key => {
+    const prop = properties[key];
+    if (!prop) return;
+    
+    let valuePreview = '';
+    if (prop.type === 'rich_text' && Array.isArray(prop.rich_text)) {
+      valuePreview = prop.rich_text.map((t: any) => t.plain_text).join('').substring(0, 50);
+    } else if (prop.type === 'title' && Array.isArray(prop.title)) {
+      valuePreview = prop.title.map((t: any) => t.plain_text).join('').substring(0, 50);
+    } else if (prop.type === 'select' && prop.select) {
+      valuePreview = prop.select.name;
+    } else if (prop.type === 'files' && Array.isArray(prop.files)) {
+      valuePreview = `${prop.files.length} files`;
+    } else if (prop.type === 'url' && prop.url) {
+      valuePreview = prop.url.substring(0, 50);
+    } else if (prop.type === 'formula' && prop.formula) {
+      if (prop.formula.type === 'string') {
+        valuePreview = prop.formula.string?.substring(0, 50) || '';
+      }
+    }
+    
+    console.log(`  "${key}" (${prop.type}): ${valuePreview || '(empty)'}`);
+  });
+  
+  const authorRelatedKeys = propertyKeys.filter(key => 
+    key.toLowerCase().includes('author') || 
+    key.toLowerCase().includes('profile') ||
+    key.toLowerCase().includes('bible') ||
+    key.toLowerCase().includes('verse') ||
+    key.toLowerCase().includes('img') ||
+    key.toLowerCase().includes('image')
+  );
+  
+  console.log('[Notion Blog Adapter] Author/Profile 관련 프로퍼티:', authorRelatedKeys);
+  console.log('==========================================\n');
 
   // 필수 속성 추출 (실제 Notion 데이터베이스 속성 이름 사용)
   const title = extractTitle(properties.Name); // Name (한글 제목)
@@ -98,7 +204,7 @@ export function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
   const slug = extractFormula(properties.slug); // slug (Formula 타입)
   const description = extractRichText(properties.SundayName || properties.description); // SundayName 또는 description
   const date = extractDate(properties.Date); // Date (대문자 D)
-  const category = extractSelect(properties.Tag, '아티클'); // Tag를 category로 사용
+  const category = extractRichText(properties.SundayName || properties.Tag); // SundayName 우선, 없으면 Tag
 
   // 이미지 추출: 페이지 cover, properties.Cover, properties.cover, properties.image 순서로 확인
   let image = '';
@@ -114,12 +220,138 @@ export function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
     image = extractImage(properties.Cover || properties.cover || properties.image);
   }
 
-  // Bible 정보 추출 (Author 필드를 Bible 정보로 사용)
-  const author: Author = {
-    name: extractRichText(properties.Bible || properties.Author), // Bible 본문
-    role: extractRichText(properties.Verse), // Verse (성경 구절)
-    avatarSrc: '', // 아바타 사용 안함
+  // Author 처리: Relation 타입인 경우 Author 페이지에서 정보 가져오기
+  let author: Author = {
+    name: '',
+    role: '',
+    avatarSrc: '',
   };
+  
+  // 프로퍼티 키를 동적으로 찾기 (대소문자 구분 없이)
+  const findProperty = (possibleNames: string[]): any => {
+    
+    // 1. 정확한 매칭 시도
+    for (const name of possibleNames) {
+      if (properties[name] && properties[name].type) {
+        return properties[name];
+      }
+    }
+    
+    // 2. 대소문자 무시 매칭 시도
+    for (const name of possibleNames) {
+      const found = propertyKeys.find(key => key.toLowerCase() === name.toLowerCase());
+      if (found && properties[found] && properties[found].type) {
+        return properties[found];
+      }
+    }
+    
+    // 3. 부분 매칭 시도 (마지막 수단)
+    for (const name of possibleNames) {
+      const found = propertyKeys.find(key => 
+        key.toLowerCase().includes(name.toLowerCase()) || 
+        name.toLowerCase().includes(key.toLowerCase())
+      );
+      if (found && properties[found] && properties[found].type) {
+        console.log(`[Notion Blog Adapter] 부분 매칭 발견: "${found}" (찾던 이름: "${name}")`);
+        return properties[found];
+      }
+    }
+    
+    return null;
+  };
+
+  // Profile-Img 프로퍼티 추출 (Files 타입 또는 URL 타입 모두 지원)
+  // 모든 프로퍼티 키를 확인하여 profile이나 img가 포함된 것 찾기
+  let profileImgProperty = findProperty([
+    'Profile-Img', 'profile-img', 'Profile-Image', 'profile-image', 
+    'ProfileImg', 'profileImg', 'Profile Image', 'profile image',
+    'Profile', 'profile', 'Avatar', 'avatar', 'Image', 'image'
+  ]);
+  
+  // 더 넓은 검색: profile이나 img가 포함된 모든 프로퍼티 확인
+  if (!profileImgProperty) {
+    const profileKeys = propertyKeys.filter(key => 
+      key.toLowerCase().includes('profile') || 
+      key.toLowerCase().includes('img') ||
+      key.toLowerCase().includes('avatar') ||
+      key.toLowerCase().includes('image')
+    );
+    if (profileKeys.length > 0) {
+      profileImgProperty = properties[profileKeys[0]];
+      console.log(`[Notion Blog Adapter] Profile 이미지 프로퍼티 발견: "${profileKeys[0]}"`);
+    }
+  }
+  
+  let profileImg = '';
+  if (profileImgProperty) {
+    profileImg = extractImage(profileImgProperty);
+    if (!profileImg) {
+      profileImg = extractUrl(profileImgProperty);
+    }
+  }
+
+  const authorProperty = findProperty(['Author', 'author']);
+  if (authorProperty?.type === 'relation' && Array.isArray(authorProperty.relation) && authorProperty.relation.length > 0) {
+    // Relation 타입: Author 페이지에서 정보 가져오기
+    const authorId = authorProperty.relation[0].id;
+    author = await fetchAuthorFromRelation(authorId, notion);
+    // Profile-Img가 있으면 덮어쓰기
+    if (profileImg) {
+      author.avatarSrc = profileImg;
+    }
+  } else {
+    // 기존 방식: Author-Name 프로퍼티 우선 사용, 하위 호환성을 위해 Bible/Author도 지원
+    let authorNameProperty = findProperty([
+      'Author-Name', 'author-name', 'Author Name', 'author name',
+      'AuthorName', 'authorName', 'Bible', 'bible'
+    ]);
+    
+    // 더 넓은 검색: author가 포함된 모든 프로퍼티 확인
+    if (!authorNameProperty) {
+      const authorKeys = propertyKeys.filter(key => 
+        key.toLowerCase().includes('author') && 
+        !key.toLowerCase().includes('role')
+      );
+      if (authorKeys.length > 0) {
+        authorNameProperty = properties[authorKeys[0]];
+        console.log(`[Notion Blog Adapter] Author 이름 프로퍼티 발견: "${authorKeys[0]}"`);
+      }
+    }
+    
+    const authorName = authorNameProperty ? extractRichText(authorNameProperty) : '';
+    
+    const authorRoleProperty = findProperty([
+      'Verse', 'verse', 'Role', 'role', 
+      'Author-Role', 'author-role', 'Author Role', 'author role'
+    ]);
+    const authorRole = authorRoleProperty ? extractRichText(authorRoleProperty) : '';
+
+    author = {
+      name: authorName,
+      role: authorRole,
+      avatarSrc: profileImg,
+    };
+    
+    // 디버깅: 추출된 Author 정보 확인
+    console.log('\n========== Author 정보 추출 결과 ==========');
+    console.log('[Notion Blog Adapter] 최종 Author 정보:', {
+      name: authorName || '(비어있음)',
+      role: authorRole || '(비어있음)',
+      avatarSrc: profileImg || '(비어있음)',
+    });
+    
+    if (!authorName && !profileImg) {
+      console.log('\n⚠️ 경고: Author-Name과 Profile-Img를 찾을 수 없습니다!');
+      console.log('다음 프로퍼티들을 확인했습니다:');
+      propertyKeys.forEach(key => {
+        const prop = properties[key];
+        if (prop) {
+          console.log(`  - "${key}" (${prop.type})`);
+        }
+      });
+    }
+    console.log('==========================================\n');
+  }
 
   // 선택적 속성
   const tags = extractMultiSelect(properties.tags || properties.Tag);
@@ -143,8 +375,10 @@ export function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
  * @param pages - Notion 페이지 배열
  * @returns BlogPost 배열
  */
-export function notionPagesToBlogPosts(pages: any[]): BlogPost[] {
-  return pages
-    .filter((page) => page.object === 'page' && 'properties' in page)
-    .map((page) => notionPageToBlogPost(page as PageObjectResponse));
+export async function notionPagesToBlogPosts(pages: any[]): Promise<BlogPost[]> {
+  const filteredPages = pages.filter((page) => page.object === 'page' && 'properties' in page);
+  const blogPosts = await Promise.all(
+    filteredPages.map((page) => notionPageToBlogPost(page as PageObjectResponse))
+  );
+  return blogPosts;
 }
