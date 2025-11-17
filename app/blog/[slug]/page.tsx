@@ -52,7 +52,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
   }
 
   // Notion 페이지를 BlogPost로 변환
-  const post = notionPageToBlogPost(notionPage);
+  const post = await notionPageToBlogPost(notionPage);
 
   // 블록 콘텐츠 가져오기
   const blocks = await fetchPageBlocks(notionPage.id);
@@ -86,29 +86,43 @@ export default async function BlogPage({ params }: BlogPageProps) {
                     {post.title}
                   </h1>
 
-                  <p className="text-muted-foreground text-lg leading-7">
-                    {post.description}
-                  </p>
+                  {post.titleEn && (
+                    <p className="text-muted-foreground text-lg leading-7">
+                      {post.titleEn}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-10 w-10">
-                    {post.author.avatarSrc && (
-                      <AvatarImage
-                        src={post.author.avatarSrc}
-                        alt={post.author.name}
-                      />
-                    )}
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <p className="text-foreground text-sm leading-5 font-medium">
-                      {post.author.name}
-                    </p>
-                    <p className="text-muted-foreground text-sm leading-5">
-                      {post.author.role}
-                    </p>
+                {(post.author.name || post.author.avatarSrc) && (
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-10 w-10">
+                      {post.author.avatarSrc ? (
+                        <AvatarImage
+                          src={post.author.avatarSrc}
+                          alt={post.author.name || 'Author'}
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-muted flex items-center justify-center rounded-full">
+                          <span className="text-muted-foreground text-xs">
+                            {post.author.name?.[0]?.toUpperCase() || '?'}
+                          </span>
+                        </div>
+                      )}
+                    </Avatar>
+                    <div className="flex flex-col">
+                      {post.author.name && (
+                        <p className="text-foreground text-sm leading-5 font-medium">
+                          {post.author.name}
+                        </p>
+                      )}
+                      {post.author.role && (
+                        <p className="text-muted-foreground text-sm leading-5">
+                          {post.author.role}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="h-full flex-1">
