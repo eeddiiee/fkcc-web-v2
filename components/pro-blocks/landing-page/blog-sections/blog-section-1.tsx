@@ -8,7 +8,7 @@ import { notionPagesToBlogPosts } from "@/lib/notion-blog-adapter";
 export async function BlogSection1() {
   // Notion에서 블로그 포스트 가져오기
   const response = await fetchPages();
-  const posts = notionPagesToBlogPosts(response.results);
+  const posts = await notionPagesToBlogPosts(response.results);
 
   // 디버깅: 포스트 데이터 확인
   console.log('[BlogSection1] 포스트 데이터:', JSON.stringify(posts, null, 2));
