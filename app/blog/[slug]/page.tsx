@@ -2,7 +2,7 @@ import { fetchPages, fetchBySlug, fetchPageBlocks } from "@/lib/notion";
 import { notionPageToBlogPost } from "@/lib/notion-blog-adapter";
 import { NotionBlogContentRenderer } from "@/lib/notion-blog-content-renderer";
 import Image from "next/image";
-import { LpNavbar1 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-1";
+import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-5";
 import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
 import { notFound } from "next/navigation";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -59,7 +59,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
 
   return (
     <>
-      <LpNavbar1 />
+      <LpNavbar5 />
       <section
         className="bg-background py-16 md:py-24"
         aria-labelledby="article-title"

@@ -1,5 +1,5 @@
 import { HeroSection10 } from "@/components/pro-blocks/landing-page/hero-sections/hero-section-10";
-import { LpNavbar1 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-1";
+import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-5";
 import { FeatureSection9 } from "@/components/pro-blocks/landing-page/feature-sections/feature-section-9";
 import { FeatureSection1 } from "@/components/pro-blocks/landing-page/feature-sections/feature-section-1";
 import { TestimonialsSection4 } from "@/components/pro-blocks/landing-page/testimonials-sections/testimonials-section-4";
@@ -10,7 +10,7 @@ import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
 export default function Home() {
   return (
     <>
-      <LpNavbar1 />
+      <LpNavbar5 />
       <HeroSection10 />
       <FeatureSection9 />
       <FeatureSection1 />

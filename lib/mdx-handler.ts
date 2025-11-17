@@ -14,6 +14,7 @@ export interface Author {
 export interface BlogPost {
   slug: string;
   title: string;
+  titleEn?: string;
   description: string;
   date: string;
   category: string;

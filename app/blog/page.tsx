@@ -1,13 +1,18 @@
-import { LpNavbar1 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-1";
-import { BlogPageSection } from "@/components/pro-blocks/landing-page/blog-sections/blog-page-section";
+import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-5";
+import { SermonSection } from "@/components/pro-blocks/landing-page/blog-sections/sermon-section";
 import { ContactSection6 } from "@/components/pro-blocks/landing-page/contact-sections/contact-section-6";
 import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
+import { fetchPages } from "@/lib/notion";
+import { notionPagesToBlogPosts } from "@/lib/notion-blog-adapter";
 
-export default function Home() {
+export default async function BlogPage() {
+  const response = await fetchPages();
+  const posts = notionPagesToBlogPosts(response.results);
+
   return (
     <>
-      <LpNavbar1 />
-      <BlogPageSection />
+      <LpNavbar5 />
+      <SermonSection posts={posts} />
       <ContactSection6 />
       <Footer1 />
     </>

@@ -12,16 +12,16 @@ export const notion = new Client({
 });
 
 /**
- * Live 상태인 모든 블로그 페이지 조회
- * @returns Notion 데이터베이스의 Live 페이지 목록
+ * Live 상태인 모든 설교 페이지 조회
+ * @returns Notion 설교 데이터베이스의 Live 페이지 목록
  */
 export const fetchPages = cache(async () => {
   try {
     const response = await notion.databases.query({
-      database_id: process.env.NOTION_DATABASE_ID!,
+      database_id: process.env.NOTION_SERMON_DB_ID!,
       filter: {
         property: "Status",
-        select: {
+        status: {
           equals: "Live",
         },
       },
@@ -49,14 +49,14 @@ export const fetchPages = cache(async () => {
 });
 
 /**
- * slug로 특정 블로그 페이지 조회
+ * slug로 특정 설교 페이지 조회
  * @param slug - URL slug (예: "my-blog-post")
  * @returns 해당 slug의 Notion 페이지 또는 undefined
  */
 export const fetchBySlug = cache(async (slug: string): Promise<PageObjectResponse | undefined> => {
   try {
     const response = await notion.databases.query({
-      database_id: process.env.NOTION_DATABASE_ID!,
+      database_id: process.env.NOTION_SERMON_DB_ID!,
       filter: {
         property: "slug",
         rich_text: {
@@ -130,5 +130,79 @@ export const fetchAllPageBlocks = cache(async (pageId: string): Promise<BlockObj
   } catch (error) {
     console.error(`[fetchAllPageBlocks] pageId="${pageId}" 전체 블록 조회 실패:`, error);
     throw new Error('블로그 콘텐츠를 가져오는데 실패했습니다.');
+  }
+});
+
+// ==================== 찬양 관련 함수 ====================
+
+/**
+ * Live 상태인 모든 찬양 페이지 조회
+ * @returns Notion 찬양 데이터베이스의 Live 페이지 목록
+ */
+export const fetchWorshipPages = cache(async () => {
+  try {
+    const response = await notion.databases.query({
+      database_id: process.env.NOTION_WORSHIP_DB_ID!,
+      filter: {
+        property: "Status",
+        status: {
+          equals: "Live",
+        },
+      },
+      sorts: [
+        {
+          property: "Date",
+          direction: "descending",
+        },
+      ],
+    });
+
+    console.log('[fetchWorshipPages] 성공! 찬양 페이지 수:', response.results.length);
+
+    if (response.results.length > 0) {
+      const firstPage = response.results[0] as any;
+      console.log('[fetchWorshipPages] 첫 번째 페이지 속성 이름들:', Object.keys(firstPage.properties));
+    }
+
+    return response;
+  } catch (error) {
+    console.error('[fetchWorshipPages] Notion API 에러:', error);
+    throw new Error('찬양 목록을 가져오는데 실패했습니다.');
+  }
+});
+
+/**
+ * slug로 특정 찬양 페이지 조회
+ * @param slug - URL slug (예: "2025-10-26-Great-and-Mighty-God-Medley")
+ * @returns 해당 slug의 Notion 찬양 페이지 또는 undefined
+ */
+export const fetchWorshipBySlug = cache(async (slug: string): Promise<PageObjectResponse | undefined> => {
+  try {
+    const response = await notion.databases.query({
+      database_id: process.env.NOTION_WORSHIP_DB_ID!,
+      filter: {
+        property: "slug",
+        formula: {
+          string: {
+            equals: slug,
+          },
+        },
+      },
+    });
+
+    if (response.results.length === 0) {
+      return undefined;
+    }
+
+    const page = response.results[0];
+
+    if (page.object === 'page' && 'properties' in page) {
+      return page as PageObjectResponse;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error(`[fetchWorshipBySlug] slug="${slug}" 조회 실패:`, error);
+    return undefined;
   }
 });

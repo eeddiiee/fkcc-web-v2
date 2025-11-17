@@ -1,4 +1,4 @@
-import { LpNavbar1 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-1";
+import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-5";
 import { TeamSection2 } from "@/components/pro-blocks/landing-page/team-sections/team-section-2";
 import { TestimonialsSection4 } from "@/components/pro-blocks/landing-page/testimonials-sections/testimonials-section-4";
 import { LogoSection7 } from "@/components/pro-blocks/landing-page/logo-sections/logo-section-7";
@@ -9,7 +9,7 @@ import { HeroSection7 } from "@/components/pro-blocks/landing-page/hero-sections
 export default function AboutPage() {
   return (
     <>
-      <LpNavbar1 />
+      <LpNavbar5 />
       <HeroSection7 />
       <TeamSection2 />
       <TestimonialsSection4 />

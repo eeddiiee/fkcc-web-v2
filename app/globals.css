@@ -144,33 +144,41 @@
   button {
     cursor: pointer;
   }
+  h1, h2, h3 {
+    font-family: "Hahmlet", serif;
+    font-optical-sizing: auto;
+  }
   .heading-xl {
-    font-family: Host Grotesk;
+    font-family: "Hahmlet", serif;
     font-size: 3rem;
     line-height: 1;
     font-weight: 700;
     letter-spacing: -0.01em;
+    font-optical-sizing: auto;
   }
   .heading-lg {
-    font-family: Host Grotesk;
+    font-family: "Hahmlet", serif;
     font-size: 2.25rem;
     line-height: 1.111;
     font-weight: 700;
     letter-spacing: -0.01em;
+    font-optical-sizing: auto;
   }
   .heading-md {
-    font-family: Host Grotesk;
+    font-family: "Hahmlet", serif;
     font-size: 1.875rem;
     line-height: 1.2;
     font-weight: 700;
     letter-spacing: -0.01em;
+    font-optical-sizing: auto;
   }
   .heading-sm {
-    font-family: Host Grotesk;
+    font-family: "Hahmlet", serif;
     font-size: 1.5rem;
     line-height: 1.333;
     font-weight: 700;
     letter-spacing: -0.01em;
+    font-optical-sizing: auto;
   }
   .container-padding-x {
     padding-inline: 1.5rem;

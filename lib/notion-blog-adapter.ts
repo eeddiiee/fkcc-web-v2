@@ -94,17 +94,31 @@ export function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
 
   // 필수 속성 추출 (실제 Notion 데이터베이스 속성 이름 사용)
   const title = extractTitle(properties.Name); // Name (한글 제목)
+  const titleEn = extractRichText(properties['Title(en)']); // Title(en) (영문 제목)
   const slug = extractFormula(properties.slug); // slug (Formula 타입)
   const description = extractRichText(properties.SundayName || properties.description); // SundayName 또는 description
   const date = extractDate(properties.Date); // Date (대문자 D)
   const category = extractSelect(properties.Tag, '아티클'); // Tag를 category로 사용
-  const image = extractImage(properties.image); // image
 
-  // Author 정보 추출
+  // 이미지 추출: 페이지 cover, properties.Cover, properties.cover, properties.image 순서로 확인
+  let image = '';
+  if (page.cover) {
+    if (page.cover.type === 'external' && page.cover.external) {
+      image = page.cover.external.url;
+    } else if (page.cover.type === 'file' && page.cover.file) {
+      image = page.cover.file.url;
+    }
+  }
+  if (!image) {
+    // Cover 프로퍼티를 우선적으로 확인 (대문자, 소문자 모두)
+    image = extractImage(properties.Cover || properties.cover || properties.image);
+  }
+
+  // Bible 정보 추출 (Author 필드를 Bible 정보로 사용)
   const author: Author = {
-    name: extractRichText(properties.Author), // Author
-    role: extractRichText(properties.author_role || properties.Verse), // Verse를 role로 사용 (임시)
-    avatarSrc: extractUrl(properties.author_avatar),
+    name: extractRichText(properties.Bible || properties.Author), // Bible 본문
+    role: extractRichText(properties.Verse), // Verse (성경 구절)
+    avatarSrc: '', // 아바타 사용 안함
   };
 
   // 선택적 속성
@@ -113,6 +127,7 @@ export function notionPageToBlogPost(page: PageObjectResponse): BlogPost {
   return {
     slug,
     title,
+    titleEn,
     description,
     date,
     category,

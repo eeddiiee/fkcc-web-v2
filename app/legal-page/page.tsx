@@ -1,12 +1,12 @@
 "use client";
 
-import { LpNavbar1 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-1";
+import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-5";
 import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
 
 export default function LegalPage() {
   return (
     <>
-      <LpNavbar1 />
+      <LpNavbar5 />
 
       <section
         className="bg-background py-16 md:py-24 border-b border-dashed border-border"
