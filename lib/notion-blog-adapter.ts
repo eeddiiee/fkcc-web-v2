@@ -1,6 +1,7 @@
 import { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints';
 import { BlogPost, Author } from './mdx-handler';
 import { notion } from './notion';
+import { fetchPageById } from './notion';
 
 /**
  * Notion 페이지 속성에서 값을 안전하게 추출하는 헬퍼 함수들
@@ -75,6 +76,27 @@ function extractImage(property: any): string {
   return '';
 }
 
+// Rollup 속성 추출 (이미지 URL)
+function extractRollup(property: any): string {
+  if (property?.type === 'rollup' && property.rollup) {
+    // rollup.type이 'array'인 경우
+    if (property.rollup.type === 'array' && Array.isArray(property.rollup.array) && property.rollup.array.length > 0) {
+      const firstItem = property.rollup.array[0];
+      // 첫 번째 항목이 files 타입인 경우
+      if (firstItem?.type === 'files' && Array.isArray(firstItem.files) && firstItem.files.length > 0) {
+        const file = firstItem.files[0];
+        // Notion 내부 파일 또는 외부 URL 지원
+        if (file.type === 'file' && file.file) {
+          return file.file.url || '';
+        } else if (file.type === 'external' && file.external) {
+          return file.external.url || '';
+        }
+      }
+    }
+  }
+  return '';
+}
+
 // URL 속성 추출
 function extractUrl(property: any): string {
   if (property?.type === 'url' && property.url) {
@@ -117,6 +139,33 @@ async function extractRelation(property: any): Promise<string> {
   return '';
 }
 
+// Relation 속성에서 첫 번째 관계의 ID 추출
+function extractRelationId(property: any): string | null {
+  if (property?.type === 'relation' && Array.isArray(property.relation) && property.relation.length > 0) {
+    return property.relation[0].id || null;
+  }
+  return null;
+}
+
+// Relation된 페이지에서 Name 속성 추출
+async function extractRelationName(property: any): Promise<string> {
+  const relationId = extractRelationId(property);
+  if (!relationId) {
+    return '';
+  }
+
+  try {
+    const relatedPage = await fetchPageById(relationId);
+    if (relatedPage && relatedPage.properties.Name) {
+      return extractTitle(relatedPage.properties.Name);
+    }
+  } catch (error) {
+    console.error('[extractRelationName] Relation 페이지 조회 실패:', error);
+  }
+
+  return '';
+}
+
 // Relation으로 연결된 Author 페이지에서 정보 추출
 async function fetchAuthorFromRelation(relationId: string, notion: any): Promise<Author> {
   if (!relationId) {
@@ -131,10 +180,14 @@ async function fetchAuthorFromRelation(relationId: string, notion: any): Promise
     const authorPage = await notion.pages.retrieve({ page_id: relationId }) as PageObjectResponse;
     const props = authorPage.properties;
 
+    // Profile-Img에서 이미지 추출 (rollup 타입 지원)
+    const profileImg = extractRollup(props['Profile-Img'] || props['profile-img']) || 
+                       extractImage(props['Profile-Img'] || props['profile-img']) || '';
+
     return {
       name: extractTitle(props.Name || props.name) || extractRichText(props.Name || props.name),
       role: extractRichText(props.Role || props.role) || '',
-      avatarSrc: extractImage(props['Profile-Img'] || props['profile-img']) || '',
+      avatarSrc: profileImg,
     };
   } catch (error) {
     console.error('Author Relation 페이지 조회 실패:', error);
@@ -204,7 +257,8 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
   const slug = extractFormula(properties.slug); // slug (Formula 타입)
   const description = extractRichText(properties.SundayName || properties.description); // SundayName 또는 description
   const date = extractDate(properties.Date); // Date (대문자 D)
-  const category = extractRichText(properties.SundayName || properties.Tag); // SundayName 우선, 없으면 Tag
+  const category = extractSelect(properties.Tag, '아티클'); // Tag를 category로 사용
+  const sundayName = extractRichText(properties.SundayName); // SundayName
 
   // 이미지 추출: 페이지 cover, properties.Cover, properties.cover, properties.image 순서로 확인
   let image = '';
@@ -284,7 +338,8 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
   
   let profileImg = '';
   if (profileImgProperty) {
-    profileImg = extractImage(profileImgProperty);
+    // rollup 타입 지원 추가
+    profileImg = extractRollup(profileImgProperty) || extractImage(profileImgProperty);
     if (!profileImg) {
       profileImg = extractUrl(profileImgProperty);
     }
@@ -367,6 +422,7 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
     author,
     content: '', // 블록 렌더링 후 채워질 예정
     tags,
+    sundayName,
   };
 }
 
@@ -377,8 +433,9 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
  */
 export async function notionPagesToBlogPosts(pages: any[]): Promise<BlogPost[]> {
   const filteredPages = pages.filter((page) => page.object === 'page' && 'properties' in page);
-  const blogPosts = await Promise.all(
+
+  // 모든 페이지를 병렬로 변환
+  return Promise.all(
     filteredPages.map((page) => notionPageToBlogPost(page as PageObjectResponse))
   );
-  return blogPosts;
 }

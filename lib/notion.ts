@@ -206,3 +206,23 @@ export const fetchWorshipBySlug = cache(async (slug: string): Promise<PageObject
     return undefined;
   }
 });
+
+/**
+ * 페이지 ID로 페이지 조회
+ * @param pageId - Notion 페이지 ID
+ * @returns Notion 페이지 또는 undefined
+ */
+export const fetchPageById = cache(async (pageId: string): Promise<PageObjectResponse | undefined> => {
+  try {
+    const page = await notion.pages.retrieve({ page_id: pageId });
+
+    if (page.object === 'page' && 'properties' in page) {
+      return page as PageObjectResponse;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error(`[fetchPageById] pageId="${pageId}" 조회 실패:`, error);
+    return undefined;
+  }
+});

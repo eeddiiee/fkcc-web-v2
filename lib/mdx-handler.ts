@@ -22,6 +22,7 @@ export interface BlogPost {
   author: Author;
   content: string;
   tags?: string[];
+  sundayName?: string;
 }
 
 const md = new MarkdownIt({

@@ -6,7 +6,7 @@ import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-na
 import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
 import { notFound } from "next/navigation";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ContactSection6 } from "@/components/pro-blocks/landing-page/contact-sections/contact-section-6";
 import { BlogMoreArticles } from "@/components/pro-blocks/landing-page/blog-sections/blog-more-articles";
 
@@ -78,7 +78,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
                       ·
                     </span>
                     <p className="text-muted-foreground text-sm leading-5">
-                      {post.category}
+                      {post.sundayName || post.category}
                     </p>
                   </div>
 
