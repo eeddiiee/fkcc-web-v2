@@ -8,7 +8,7 @@ import 'server-only';
 
 // Notion Client 초기화
 export const notion = new Client({
-  auth: process.env.NOTION_TOKEN,
+  auth: process.env.NOTION_TOKEN || '',
 });
 
 /**
@@ -16,9 +16,15 @@ export const notion = new Client({
  * @returns Notion 설교 데이터베이스의 Live 페이지 목록
  */
 export const fetchPages = cache(async () => {
+  // 환경 변수 확인
+  if (!process.env.NOTION_SERMON_DB_ID) {
+    console.warn('[fetchPages] NOTION_SERMON_DB_ID 환경 변수가 설정되지 않았습니다.');
+    return { results: [] };
+  }
+
   try {
     const response = await notion.databases.query({
-      database_id: process.env.NOTION_SERMON_DB_ID!,
+      database_id: process.env.NOTION_SERMON_DB_ID,
       filter: {
         property: "Status",
         status: {
@@ -44,7 +50,8 @@ export const fetchPages = cache(async () => {
     return response;
   } catch (error) {
     console.error('[fetchPages] Notion API 에러:', error);
-    throw new Error('블로그 목록을 가져오는데 실패했습니다.');
+    // 빌드 실패를 방지하기 위해 빈 결과 반환
+    return { results: [] };
   }
 });
 
@@ -140,9 +147,15 @@ export const fetchAllPageBlocks = cache(async (pageId: string): Promise<BlockObj
  * @returns Notion 찬양 데이터베이스의 Live 페이지 목록
  */
 export const fetchWorshipPages = cache(async () => {
+  // 환경 변수 확인
+  if (!process.env.NOTION_WORSHIP_DB_ID) {
+    console.warn('[fetchWorshipPages] NOTION_WORSHIP_DB_ID 환경 변수가 설정되지 않았습니다.');
+    return { results: [] };
+  }
+
   try {
     const response = await notion.databases.query({
-      database_id: process.env.NOTION_WORSHIP_DB_ID!,
+      database_id: process.env.NOTION_WORSHIP_DB_ID,
       filter: {
         property: "Status",
         status: {
@@ -167,7 +180,8 @@ export const fetchWorshipPages = cache(async () => {
     return response;
   } catch (error) {
     console.error('[fetchWorshipPages] Notion API 에러:', error);
-    throw new Error('찬양 목록을 가져오는데 실패했습니다.');
+    // 빌드 실패를 방지하기 위해 빈 결과 반환
+    return { results: [] };
   }
 });
 

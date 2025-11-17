@@ -13,12 +13,17 @@ interface WorshipPageProps {
 
 // ISR을 위한 정적 params 생성
 export async function generateStaticParams() {
-  const response = await fetchWorshipPages();
-  const worships = notionPagesToWorships(response.results);
+  try {
+    const response = await fetchWorshipPages();
+    const worships = notionPagesToWorships(response.results);
 
-  return worships.map((worship) => ({
-    slug: worship.slug,
-  }));
+    return worships.map((worship) => ({
+      slug: worship.slug,
+    }));
+  } catch (error) {
+    console.error('[generateStaticParams] 찬양 페이지 생성 실패:', error);
+    return [];
+  }
 }
 
 // 동적 메타데이터 생성
