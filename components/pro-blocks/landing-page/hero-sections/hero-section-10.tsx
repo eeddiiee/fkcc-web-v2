@@ -6,7 +6,6 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Tagline } from "@/components/pro-blocks/landing-page/tagline";
 import Image from "next/image";
 import Link from "next/link";
-import { Logo } from "@/components/pro-blocks/logo";
 
 export function HeroSection10() {
   return (
@@ -55,35 +54,40 @@ export function HeroSection10() {
             함께하는 파트너사:
           </p>
           <div className="flex flex-wrap justify-center gap-8">
-            <Logo
-              className="dark:invert dark:grayscale dark:brightness-0 dark:opacity-70"
+            <Image
               src="https://shadcndesign-agency-template.vercel.app/logo-01.svg"
+              alt="Partner Logo 1"
               width={140}
               height={35}
-            />
-            <Logo
               className="dark:invert dark:grayscale dark:brightness-0 dark:opacity-70"
+            />
+            <Image
               src="https://shadcndesign-agency-template.vercel.app/logo-02.svg"
+              alt="Partner Logo 2"
               width={140}
               height={35}
-            />
-            <Logo
               className="dark:invert dark:grayscale dark:brightness-0 dark:opacity-70"
+            />
+            <Image
               src="https://shadcndesign-agency-template.vercel.app/logo-03.svg"
+              alt="Partner Logo 3"
               width={140}
               height={35}
-            />
-            <Logo
               className="dark:invert dark:grayscale dark:brightness-0 dark:opacity-70"
+            />
+            <Image
               src="https://shadcndesign-agency-template.vercel.app/logo-04.svg"
+              alt="Partner Logo 4"
               width={140}
               height={35}
-            />
-            <Logo
               className="dark:invert dark:grayscale dark:brightness-0 dark:opacity-70"
+            />
+            <Image
               src="https://shadcndesign-agency-template.vercel.app/logo-05.svg"
+              alt="Partner Logo 5"
               width={100}
               height={35}
+              className="dark:invert dark:grayscale dark:brightness-0 dark:opacity-70"
             />
           </div>
         </div>
