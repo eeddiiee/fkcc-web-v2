@@ -6,7 +6,7 @@ import { fetchPages } from "@/lib/notion";
 import { notionPagesToBlogPosts } from "@/lib/notion-blog-adapter";
 
 export async function BlogSection1() {
-  // Notion에서 블로그 포스트 가져오기
+  // Notion에서 설교 포스트 가져오기
   const response = await fetchPages();
   const posts = await notionPagesToBlogPosts(response.results);
 
@@ -26,7 +26,7 @@ export async function BlogSection1() {
             <Tagline>아이디어와 인사이트</Tagline>
             {/* Main Heading */}
             <h2 id="blog-section-heading" className="heading-lg">
-              블로그 둘러보기
+              설교 둘러보기
             </h2>
             {/* Description */}
             <p className="text-muted-foreground">
@@ -42,7 +42,7 @@ export async function BlogSection1() {
           >
             {posts.slice(0, 4).map((post) => (
               <Link
-                href={`/blog/${post.slug}`}
+                href={`/sermon/${post.slug}`}
                 key={post.slug}
                 className="group block"
               >

@@ -41,7 +41,7 @@ const MENU_ITEMS: readonly MenuItem[] = [
     submenu: [
       { label: "예배안내", href: "/service/guide" },
       { label: "주보", href: "/service/bulletin" },
-      { label: "말씀목록", href: "/blog" },
+      { label: "말씀목록", href: "/sermon" },
       { label: "찬양목록", href: "/worship" },
       { label: "헌금", href: "/service/offering" },
     ],
@@ -86,6 +86,10 @@ const MENU_ITEMS: readonly MenuItem[] = [
       { label: "성경1독", href: "/discipleship/bible-reading" },
       { label: "부부학교", href: "/discipleship/marriage" },
     ],
+  },
+  {
+    label: "Components",
+    href: "/components",
   },
 ] as const;
 

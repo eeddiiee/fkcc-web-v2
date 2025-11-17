@@ -10,7 +10,7 @@ const MENU_ITEMS = [
   { label: "서비스", href: "/services" },
   { label: "포트폴리오", href: "/portfolio" },
   { label: "소개", href: "/about" },
-  { label: "블로그", href: "/blog" },
+  { label: "설교", href: "/sermon" },
 ] as const;
 
 interface NavMenuItemsProps {

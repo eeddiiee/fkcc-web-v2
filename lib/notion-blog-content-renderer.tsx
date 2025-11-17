@@ -191,7 +191,7 @@ function renderBlock(block: BlockObjectResponse, index: number): React.ReactNode
         <figure key={block.id} className="my-6">
           <img
             src={imageUrl}
-            alt={caption || 'Blog image'}
+            alt={caption || 'Sermon image'}
             className="rounded-lg w-full"
           />
           {caption && (

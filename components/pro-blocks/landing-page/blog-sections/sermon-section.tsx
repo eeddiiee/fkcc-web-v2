@@ -35,7 +35,7 @@ export function SermonSection({ posts }: SermonSectionProps) {
             {posts.map((post) => (
               <Link
                 key={post.slug}
-                href={`/blog/${post.slug}`}
+                href={`/sermon/${post.slug}`}
                 className="group flex cursor-pointer flex-col gap-6 p-0 md:flex-row"
                 role="listitem"
               >

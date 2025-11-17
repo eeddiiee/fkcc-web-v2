@@ -5,7 +5,7 @@ import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
 import { fetchPages } from "@/lib/notion";
 import { notionPagesToBlogPosts } from "@/lib/notion-blog-adapter";
 
-export default async function BlogPage() {
+export default async function SermonPage() {
   const response = await fetchPages();
   const posts = await notionPagesToBlogPosts(response.results);
 
@@ -18,3 +18,4 @@ export default async function BlogPage() {
     </>
   );
 }
+

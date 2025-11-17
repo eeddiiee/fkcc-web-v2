@@ -2,15 +2,18 @@ import { fetchPages, fetchBySlug, fetchPageBlocks } from "@/lib/notion";
 import { notionPageToBlogPost } from "@/lib/notion-blog-adapter";
 import { NotionBlogContentRenderer } from "@/lib/notion-blog-content-renderer";
 import Image from "next/image";
+import Link from "next/link";
 import { LpNavbar5 } from "@/components/pro-blocks/landing-page/lp-navbars/lp-navbar-5";
 import { Footer1 } from "@/components/pro-blocks/landing-page/footers/footer-1";
 import { notFound } from "next/navigation";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { ContactSection6 } from "@/components/pro-blocks/landing-page/contact-sections/contact-section-6";
 import { BlogMoreArticles } from "@/components/pro-blocks/landing-page/blog-sections/blog-more-articles";
+import { ArrowLeft } from "lucide-react";
 
-interface BlogPageProps {
+interface SermonPageProps {
   params: Promise<{
     slug: string;
   }>;
@@ -41,7 +44,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function BlogPage({ params }: BlogPageProps) {
+export default async function SermonPage({ params }: SermonPageProps) {
   const resolvedParams = await params;
 
   // Notion에서 페이지 조회
@@ -51,7 +54,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
     notFound();
   }
 
-  // Notion 페이지를 BlogPost로 변환
+  // Notion 페이지를 Sermon으로 변환
   const post = await notionPageToBlogPost(notionPage);
 
   // 블록 콘텐츠 가져오기
@@ -66,6 +69,16 @@ export default async function BlogPage({ params }: BlogPageProps) {
       >
         <div className="container mx-auto px-6">
           <article className="flex flex-col gap-12 md:gap-24" aria-labelledby="article-title">
+            {/* Back to List Button */}
+            <div>
+              <Button variant="outline" asChild>
+                <Link href="/sermon">
+                  <ArrowLeft className="size-4" />
+                  말씀 목록으로
+                </Link>
+              </Button>
+            </div>
+
             {/* Header Section */}
             <div className="items-top flex flex-col gap-8 lg:flex-row lg:gap-12">
               <div className="flex flex-1 flex-col justify-between gap-6">
@@ -155,3 +168,4 @@ export default async function BlogPage({ params }: BlogPageProps) {
     </>
   );
 }
+

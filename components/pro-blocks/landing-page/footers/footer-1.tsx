@@ -42,10 +42,10 @@ export function Footer1() {
               소개
             </Link>
             <Link
-              href="/blog"
+              href="/sermon"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              블로그
+              설교
             </Link>
           </nav>
         </div>

@@ -50,7 +50,7 @@ export const fetchPages = cache(async () => {
 
 /**
  * slug로 특정 설교 페이지 조회
- * @param slug - URL slug (예: "my-blog-post")
+ * @param slug - URL slug (예: "my-sermon-post")
  * @returns 해당 slug의 Notion 페이지 또는 undefined
  */
 export const fetchBySlug = cache(async (slug: string): Promise<PageObjectResponse | undefined> => {

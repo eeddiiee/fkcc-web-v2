@@ -200,19 +200,19 @@ async function fetchAuthorFromRelation(relationId: string, notion: any): Promise
 }
 
 /**
- * Notion PageObjectResponse를 BlogPost 인터페이스로 변환
+ * Notion PageObjectResponse를 BlogPost 인터페이스로 변환 (Sermon용)
  * @param page - Notion 페이지 객체
  * @returns BlogPost 객체
  */
 export async function notionPageToBlogPost(page: PageObjectResponse): Promise<BlogPost> {
   const properties = page.properties;
-  
+
   // 프로퍼티 키 목록 (재사용)
   const propertyKeys = Object.keys(properties);
   
   // 디버깅: 모든 프로퍼티 정보 출력
   console.log('\n========== Notion 프로퍼티 디버깅 ==========');
-  console.log('[Notion Blog Adapter] 모든 프로퍼티 키:', propertyKeys);
+  console.log('[Notion Sermon Adapter] 모든 프로퍼티 키:', propertyKeys);
   
   // 모든 프로퍼티의 타입과 값 출력
   propertyKeys.forEach(key => {
@@ -248,7 +248,7 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
     key.toLowerCase().includes('image')
   );
   
-  console.log('[Notion Blog Adapter] Author/Profile 관련 프로퍼티:', authorRelatedKeys);
+  console.log('[Notion Sermon Adapter] Author/Profile 관련 프로퍼티:', authorRelatedKeys);
   console.log('==========================================\n');
 
   // 필수 속성 추출 (실제 Notion 데이터베이스 속성 이름 사용)
@@ -306,7 +306,7 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
         name.toLowerCase().includes(key.toLowerCase())
       );
       if (found && properties[found] && properties[found].type) {
-        console.log(`[Notion Blog Adapter] 부분 매칭 발견: "${found}" (찾던 이름: "${name}")`);
+        console.log(`[Notion Sermon Adapter] 부분 매칭 발견: "${found}" (찾던 이름: "${name}")`);
         return properties[found];
       }
     }
@@ -314,89 +314,111 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
     return null;
   };
 
-  // Profile-Img 프로퍼티 추출 (Files 타입 또는 URL 타입 모두 지원)
-  // 모든 프로퍼티 키를 확인하여 profile이나 img가 포함된 것 찾기
-  let profileImgProperty = findProperty([
-    'Profile-Img', 'profile-img', 'Profile-Image', 'profile-image', 
-    'ProfileImg', 'profileImg', 'Profile Image', 'profile image',
-    'Profile', 'profile', 'Avatar', 'avatar', 'Image', 'image'
-  ]);
-  
-  // 더 넓은 검색: profile이나 img가 포함된 모든 프로퍼티 확인
-  if (!profileImgProperty) {
-    const profileKeys = propertyKeys.filter(key => 
-      key.toLowerCase().includes('profile') || 
-      key.toLowerCase().includes('img') ||
-      key.toLowerCase().includes('avatar') ||
-      key.toLowerCase().includes('image')
-    );
-    if (profileKeys.length > 0) {
-      profileImgProperty = properties[profileKeys[0]];
-      console.log(`[Notion Blog Adapter] Profile 이미지 프로퍼티 발견: "${profileKeys[0]}"`);
-    }
-  }
-  
-  let profileImg = '';
-  if (profileImgProperty) {
-    // rollup 타입 지원 추가
-    profileImg = extractRollup(profileImgProperty) || extractImage(profileImgProperty);
-    if (!profileImg) {
-      profileImg = extractUrl(profileImgProperty);
+  // Author Relation 확인 (프로필 이미지는 항상 경로 1 사용)
+  const authorProperty = findProperty(['Author', 'author']);
+  let profileImgFromRelation = '';
+  if (authorProperty?.type === 'relation' && Array.isArray(authorProperty.relation) && authorProperty.relation.length > 0) {
+    // Author Relation이 있으면 프로필 이미지를 Relation에서 가져오기 (경로 1)
+    const authorId = authorProperty.relation[0].id;
+    try {
+      const authorPage = await notion.pages.retrieve({ page_id: authorId }) as PageObjectResponse;
+      const props = authorPage.properties;
+      
+      // Author 페이지에서 Profile-Img 추출 (rollup 타입 지원)
+      const authorProfileImgProperty = props['Profile-Img'] || props['profile-img'] || props['Profile'] || props['profile'];
+      if (authorProfileImgProperty) {
+        profileImgFromRelation = extractRollup(authorProfileImgProperty) || extractImage(authorProfileImgProperty);
+        if (!profileImgFromRelation) {
+          profileImgFromRelation = extractUrl(authorProfileImgProperty);
+        }
+      }
+    } catch (error) {
+      console.error('[Notion Sermon Adapter] Author Relation에서 프로필 이미지 추출 실패:', error);
     }
   }
 
-  const authorProperty = findProperty(['Author', 'author']);
-  if (authorProperty?.type === 'relation' && Array.isArray(authorProperty.relation) && authorProperty.relation.length > 0) {
-    // Relation 타입: Author 페이지에서 정보 가져오기
-    const authorId = authorProperty.relation[0].id;
-    author = await fetchAuthorFromRelation(authorId, notion);
-    // Profile-Img가 있으면 덮어쓰기
-    if (profileImg) {
-      author.avatarSrc = profileImg;
+  // Author-Name 프로퍼티 우선 사용 (경로 2)
+  let authorNameProperty = findProperty([
+    'Author-Name', 'author-name', 'Author Name', 'author name',
+    'AuthorName', 'authorName', 'Bible', 'bible'
+  ]);
+  
+  // 더 넓은 검색: author가 포함된 모든 프로퍼티 확인
+  if (!authorNameProperty) {
+    const authorKeys = propertyKeys.filter(key => 
+      key.toLowerCase().includes('author') && 
+      !key.toLowerCase().includes('role')
+    );
+    if (authorKeys.length > 0) {
+      authorNameProperty = properties[authorKeys[0]];
+        console.log(`[Notion Sermon Adapter] Author 이름 프로퍼티 발견: "${authorKeys[0]}"`);
     }
-  } else {
-    // 기존 방식: Author-Name 프로퍼티 우선 사용, 하위 호환성을 위해 Bible/Author도 지원
-    let authorNameProperty = findProperty([
-      'Author-Name', 'author-name', 'Author Name', 'author name',
-      'AuthorName', 'authorName', 'Bible', 'bible'
-    ]);
-    
-    // 더 넓은 검색: author가 포함된 모든 프로퍼티 확인
-    if (!authorNameProperty) {
-      const authorKeys = propertyKeys.filter(key => 
-        key.toLowerCase().includes('author') && 
-        !key.toLowerCase().includes('role')
-      );
-      if (authorKeys.length > 0) {
-        authorNameProperty = properties[authorKeys[0]];
-        console.log(`[Notion Blog Adapter] Author 이름 프로퍼티 발견: "${authorKeys[0]}"`);
-      }
+  }
+  
+  // Author-Name 프로퍼티에서 이름 추출 (Formula 또는 Rich Text 타입 지원)
+  let authorName = '';
+  if (authorNameProperty) {
+    // Formula 타입인 경우
+    if (authorNameProperty.type === 'formula') {
+      authorName = extractFormula(authorNameProperty);
+    } else {
+      // Rich Text 또는 기타 타입
+      authorName = extractRichText(authorNameProperty);
     }
-    
-    const authorName = authorNameProperty ? extractRichText(authorNameProperty) : '';
-    
+  }
+  
+  // Author-Name이 있으면 프로퍼티에서 추출, 없으면 Relation 사용 (경로 1)
+  if (authorName) {
+    // Author-Name 프로퍼티 사용 (경로 2 우선)
     const authorRoleProperty = findProperty([
       'Verse', 'verse', 'Role', 'role', 
-      'Author-Role', 'author-role', 'Author Role', 'author role'
+      'Author-Role', 'author-role', 'Author Role', 'author role',
+      'Bible', 'bible'
     ]);
     const authorRole = authorRoleProperty ? extractRichText(authorRoleProperty) : '';
 
+    // 프로필 이미지는 항상 Author Relation에서 가져오기 (경로 1)
     author = {
       name: authorName,
       role: authorRole,
-      avatarSrc: profileImg,
+      avatarSrc: profileImgFromRelation, // Author Relation에서 가져온 프로필 이미지 사용
     };
     
     // 디버깅: 추출된 Author 정보 확인
-    console.log('\n========== Author 정보 추출 결과 ==========');
-    console.log('[Notion Blog Adapter] 최종 Author 정보:', {
+    console.log('\n========== Author 정보 추출 결과 (Author-Name 프로퍼티 사용) ==========');
+    console.log('[Notion Sermon Adapter] 최종 Author 정보:', {
       name: authorName || '(비어있음)',
       role: authorRole || '(비어있음)',
-      avatarSrc: profileImg || '(비어있음)',
+      avatarSrc: profileImgFromRelation || '(비어있음)',
+      source: 'Author-Name 프로퍼티 (이름), Author Relation (프로필 이미지)',
     });
-    
-    if (!authorName && !profileImg) {
-      console.log('\n⚠️ 경고: Author-Name과 Profile-Img를 찾을 수 없습니다!');
+    console.log('==========================================\n');
+  } else {
+    // Author-Name이 없으면 Author Relation 사용 (경로 1 - Fallback)
+    if (authorProperty?.type === 'relation' && Array.isArray(authorProperty.relation) && authorProperty.relation.length > 0) {
+      // Relation 타입: Author 페이지에서 정보 가져오기
+      const authorId = authorProperty.relation[0].id;
+      author = await fetchAuthorFromRelation(authorId, notion);
+      // 프로필 이미지는 이미 fetchAuthorFromRelation에서 가져왔지만, Relation에서 가져온 것으로 덮어쓰기
+      author.avatarSrc = profileImgFromRelation || author.avatarSrc;
+      
+      console.log('\n========== Author 정보 추출 결과 (Author Relation 사용) ==========');
+      console.log('[Notion Sermon Adapter] 최종 Author 정보:', {
+        name: author.name || '(비어있음)',
+        role: author.role || '(비어있음)',
+        avatarSrc: author.avatarSrc || '(비어있음)',
+        source: 'Author Relation',
+      });
+      console.log('==========================================\n');
+    } else {
+      // 둘 다 없는 경우
+      author = {
+        name: '',
+        role: '',
+        avatarSrc: profileImgFromRelation, // Author Relation에서 가져온 프로필 이미지 (없으면 빈 문자열)
+      };
+      
+      console.log('\n⚠️ 경고: Author-Name과 Author Relation을 찾을 수 없습니다!');
       console.log('다음 프로퍼티들을 확인했습니다:');
       propertyKeys.forEach(key => {
         const prop = properties[key];
@@ -404,8 +426,8 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
           console.log(`  - "${key}" (${prop.type})`);
         }
       });
+      console.log('==========================================\n');
     }
-    console.log('==========================================\n');
   }
 
   // 선택적 속성
@@ -427,7 +449,7 @@ export async function notionPageToBlogPost(page: PageObjectResponse): Promise<Bl
 }
 
 /**
- * Notion 페이지 배열을 BlogPost 배열로 변환
+ * Notion 페이지 배열을 BlogPost 배열로 변환 (Sermon용)
  * @param pages - Notion 페이지 배열
  * @returns BlogPost 배열
  */
