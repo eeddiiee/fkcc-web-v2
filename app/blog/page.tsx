@@ -7,7 +7,7 @@ import { notionPagesToBlogPosts } from "@/lib/notion-blog-adapter";
 
 export default async function BlogPage() {
   const response = await fetchPages();
-  const posts = notionPagesToBlogPosts(response.results);
+  const posts = await notionPagesToBlogPosts(response.results);
 
   return (
     <>
